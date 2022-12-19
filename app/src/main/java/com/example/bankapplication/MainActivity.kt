@@ -1,8 +1,10 @@
 package com.example.bankapplication
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -18,6 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bankapplication.ui.theme.BankApplicationTheme
 import com.google.gson.Gson
+import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -36,7 +39,6 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainView() {
-    val gson = Gson()
     var username by remember { mutableStateOf(TextFieldValue("")) }
     var password by remember { mutableStateOf(TextFieldValue("")) }
     var isLogged by rememberSaveable { mutableStateOf(false) }
@@ -186,16 +188,55 @@ fun LoggedInView() {
                 Text(text = "Wygeneruj kod BLIK")
             }
             if (isBlik) {
-                Text(
-                    text = "*kod BLIK*",
-                    style = MaterialTheme.typography.displayLarge,
-                    maxLines = 1,
-                )
+                BlikView()
             }
         }
     }
     Row() {
         HistoryView()
+    }
+}
+
+@Composable
+fun BlikView() {
+    var time by remember {
+        mutableStateOf(30)
+    }
+    var progress by remember { mutableStateOf(1f) }
+    val animatedProgress by animateFloatAsState(
+        targetValue = progress,
+        animationSpec = ProgressIndicatorDefaults.ProgressAnimationSpec
+    )
+    LaunchedEffect(Unit) {
+        while (progress > 0) {
+            if (progress == 0.01f) {
+                progress = 0f
+                break
+            }
+            var newTime = "0:"
+            if (time < 10) newTime += "0$time" else newTime += time
+            Log.d("Time debug", newTime)
+            time--
+            progress -= 0.033f
+            delay(1000)
+        }
+    }
+
+    Column(
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Text (
+                text = "*kod BLIK*",
+                style = MaterialTheme.typography.displayLarge,
+                maxLines = 1,
+        )
+        Text (
+            text = time.toString()
+        )
+        LinearProgressIndicator (
+            progress = animatedProgress
+        )
     }
 }
 
